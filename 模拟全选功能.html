@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全选功能 - Made By CappuccinoRose</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecef 100%);
+            font-family: "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        /* 标题 */
+        .page-title {
+            text-align: center;
+            font-size: 24px;
+            color: #4a5568;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        /* 卡片容器 */
+        .pet-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* 表头 */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 25px;
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title {
+            font-size: 16px;
+            color: #fff;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        /* 自定义复选框 */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            display: none; /* 隐藏原生复选框 */
+        }
+
+        .checkmark {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+        }
+
+        .checkbox-wrapper:hover .checkmark {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 选中状态样式 */
+        .checkbox-wrapper input:checked + .checkmark {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        /* 勾选符号 */
+        .checkmark::after {
+            content: '';
+            width: 6px;
+            height: 10px;
+            border: solid #a8c4c9; /* 勾选颜色 */
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg) scale(0);
+            transition: transform 0.2s ease;
+        }
+
+        .checkbox-wrapper input:checked + .checkmark::after {
+            transform: rotate(45deg) scale(1);
+        }
+
+        /* 列表项 */
+        .pet-list {
+            list-style: none;
+        }
+
+        .pet-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 25px;
+            border-bottom: 1px solid #f0f2f5;
+            transition: all 0.25s ease;
+            cursor: pointer; /* 让整行看起来可点击 */
+        }
+
+        .pet-item:last-child {
+            border-bottom: none;
+        }
+
+        .pet-item:hover {
+            background: #f8fafb;
+        }
+
+        .pet-item.checked {
+            background: #f5f8f7;
+        }
+
+        /* 列表中的复选框样式调整 */
+        .pet-item .checkbox-wrapper .checkmark {
+            border-color: #d0d7de;
+        }
+
+        .pet-item .checkbox-wrapper:hover .checkmark {
+            border-color: #a8c4c9;
+        }
+
+        .pet-item .checkbox-wrapper input:checked + .checkmark {
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+            border-color: transparent;
+        }
+
+        .pet-item .checkbox-wrapper input:checked + .checkmark::after {
+            border-color: #fff;
+        }
+
+        /* 宠物图标 */
+        .pet-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            font-size: 18px;
+            transition: all 0.25s ease;
+        }
+
+        .pet-item.checked .pet-icon {
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+        }
+
+        /* 宠物名称 */
+        .pet-name {
+            flex: 1;
+            font-size: 15px;
+            color: #4a5568;
+            margin-left: 15px;
+            font-weight: 500;
+        }
+
+        /* 底部统计 */
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #f0f2f5;
+        }
+
+        .selected-count {
+            font-size: 14px;
+            color: #7a8a9a;
+        }
+
+        .selected-count span {
+            color: #6b8e7e;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(168, 196, 201, 0.4);
+        }
+
+        .action-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">喜欢的宠物</h1>
+
+        <div class="pet-card">
+            <!-- 表头 -->
+            <div class="card-header">
+                <div class="header-left">
+                    <label class="checkbox-wrapper">
+                        <!-- 全选复选框 -->
+                        <input type="checkbox" id="selectAll">
+                        <span class="checkmark"></span>
+                    </label>
+                    <span class="header-title">全选</span>
+                </div>
+                <span class="header-title">宠物名称</span>
+            </div>
+
+            <!-- 列表 -->
+            <ul class="pet-list">
+                <li class="pet-item">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="pet" value="金丝熊">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="pet-icon">🐹</div>
+                    <span class="pet-name">肉桂波利金丝熊</span>
+                </li>
+                <li class="pet-item">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="pet" value="卷毛猫">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="pet-icon">🐱</div>
+                    <span class="pet-name">塞尔凯克卷毛猫</span>
+                </li>
+                <li class="pet-item">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="pet" value="布偶猫">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="pet-icon">😺</div>
+                    <span class="pet-name">布偶猫</span>
+                </li>
+                <li class="pet-item">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="pet" value="约克夏">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="pet-icon">🐕</div>
+                    <span class="pet-name">约克夏狗</span>
+                </li>
+                <li class="pet-item">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="pet" value="边牧">
+                        <span class="checkmark"></span>
+                    </label>
+                    <div class="pet-icon">🐶</div>
+                    <span class="pet-name">陨石边牧狗</span>
+                </li>
+            </ul>
+
+            <!-- 底部 -->
+            <div class="card-footer">
+                <span class="selected-count">已选择 <span id="count">0</span> 个</span>
+                <button class="action-btn" id="confirmBtn" disabled>确认选择</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心 JavaScript 逻辑 -->
+    <script>
+        // 等待 DOM 加载完毕后执行
+        $(function() {
+            // 1. 获取元素
+            var $selectAll = $('#selectAll'); // 全选按钮
+            var $pets = $('input[name="pet"]'); // 所有子复选框
+            var $petItems = $('.pet-item'); // 每一行
+            var $count = $('#count'); // 计数器
+            var $confirmBtn = $('#confirmBtn'); // 确认按钮
+
+            // 2. 更新底部统计数字
+            function updateCount() {
+                // 获取当前选中的子复选框数量
+                var checkedCount = $pets.filter(':checked').length;
+                $count.text(checkedCount);
+                
+                // 如果选中数量大于0，启用按钮；否则禁用
+                $confirmBtn.prop('disabled', checkedCount === 0);
+            }
+
+            // 3. 更新列表项的背景样式
+            function updateItemStyle() {
+                $petItems.each(function() {
+                    var isChecked = $(this).find('input[name="pet"]').prop('checked');
+                    $(this).toggleClass('checked', isChecked);
+                });
+            }
+
+            // 4. 全选功能实现
+            $selectAll.on('change', function() {
+                // 获取全选框的状态（true 或 false）
+                var isChecked = $(this).prop('checked');
+                
+                // 将所有子复选框设置为相同状态
+                $pets.prop('checked', isChecked);
+                
+                // 更新统计和样式
+                updateCount();
+                updateItemStyle();
+            });
+
+            // 5. 子项点击事件（实现反推全选状态）
+            $pets.on('change', function() {
+                // 计算：总数 == 选中的数量 ?
+                var allChecked = $pets.length === $pets.filter(':checked').length;
+                
+                // 如果全部选中，则全选框打钩；否则取消打钩
+                $selectAll.prop('checked', allChecked);
+                
+                // 更新统计和样式
+                updateCount();
+                updateItemStyle();
+            });
+
+            // 6. 点击整行也能选中（增强体验）
+            $petItems.on('click', function(e) {
+                // 如果点击的是 label 本身（它会触发 input），就不再处理，避免重复触发
+                if ($(e.target).closest('.checkbox-wrapper').length) return;
+                
+                // 找到当前行的 input，切换其选中状态
+                var $checkbox = $(this).find('input[name="pet"]');
+                $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+            });
+
+            // 7. 确认按钮点击事件
+            $confirmBtn.on('click', function() {
+                var selected = [];
+                $pets.filter(':checked').each(function() {
+                    selected.push($(this).val());
+                });
+                alert('已选择的宠物：\n' + selected.join('、'));
+            });
+
+            // 8. 初始化页面状态
+            updateCount();
+        });
+    </script>
+</body>
+</html>
