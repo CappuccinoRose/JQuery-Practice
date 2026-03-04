@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快递单号查询 - Made By CappuccinoRose</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            font-family: "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+            text-align: center;
+        }
+
+        /* 标题 */
+        .title {
+            font-size: 26px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        /* 结果展示区 */
+        .result-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .result-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-label {
+            font-size: 13px;
+            color: #a0aec0;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .result-number {
+            font-size: 28px;
+            font-weight: 600;
+            color: #6b8e7e;
+            letter-spacing: 2px;
+            word-break: break-all;
+        }
+
+        /* 输入区域 */
+        .input-group {
+            background: #fff;
+            border-radius: 50px;
+            padding: 6px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 8px 40px rgba(107, 142, 126, 0.2);
+        }
+
+        .query-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 14px 25px;
+            font-size: 16px;
+            background: transparent;
+            color: #4a5568;
+        }
+
+        .query-input::placeholder {
+            color: #cbd5e0;
+        }
+
+        .query-btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .query-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(168, 196, 201, 0.4);
+        }
+
+        .query-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        /* 提示文字 */
+        .hint {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">快递单号查询</h1>
+        
+        <!-- 结果展示 -->
+        <div class="result-box" id="resultBox">
+            <div class="result-label">您的快递单号</div>
+            <div class="result-number" id="resultNumber"></div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="input-group">
+            <input type="text" class="query-input" id="queryInput" placeholder="请输入快递单号">
+            <button class="query-btn" id="queryBtn" disabled>查询</button>
+        </div>
+
+        <p class="hint">输入单号后实时显示，点击查询模拟搜索</p>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            var $input = $('#queryInput');
+            var $btn = $('#queryBtn');
+            var $resultBox = $('#resultBox');
+            var $resultNumber = $('#resultNumber');
+
+            // 输入监听 - 实时预览
+            $input.on('input', function() {
+                var value = $(this).val().trim();
+                
+                if (value.length > 0) {
+                    $btn.prop('disabled', false);
+                    $resultNumber.text(value);
+                    $resultBox.addClass('show');
+                } else {
+                    $btn.prop('disabled', true);
+                    $resultBox.removeClass('show');
+                }
+            });
+
+            // 查询按钮 - 模拟查询动画
+            $btn.on('click', function() {
+                if ($(this).prop('disabled')) return;
+                
+                var originalText = $(this).text();
+                
+                // 模拟加载状态
+                $(this).prop('disabled', true).text('查询中...');
+                $resultBox.css('transform', 'scale(0.98)');
+                
+                setTimeout(function() {
+                    $btn.prop('disabled', false).text(originalText);
+                    $resultBox.css('transform', 'scale(1)');
+                    
+                    // 可以在这里添加实际的查询逻辑
+                    console.log('查询单号:', $input.val());
+                }, 800);
+            });
+        });
+    </script>
+</body>
+</html>
