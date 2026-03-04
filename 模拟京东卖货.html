@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情 - Made By CappuccinoRose</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ========== 顶部导航 ========== */
+        .top-nav {
+            background: #fff;
+            border-bottom: 3px solid #e8e8e8;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-list {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 50px;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            padding: 0 20px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: #6b8e7e;
+            transition: all 0.25s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-item:hover {
+            color: #6b8e7e;
+        }
+
+        .nav-item:hover::after,
+        .nav-item.active::after {
+            width: 100%;
+        }
+
+        .nav-item.active {
+            color: #6b8e7e;
+            font-weight: 500;
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: flex;
+            gap: 40px;
+        }
+
+        /* ========== 左侧商品图区 ========== */
+        .product-gallery {
+            width: 400px;
+            flex-shrink: 0;
+        }
+
+        .breadcrumb {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .breadcrumb a {
+            color: #999;
+        }
+
+        .breadcrumb a:hover {
+            color: #6b8e7e;
+        }
+
+        /* 主图预览 */
+        .preview-box {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            cursor: crosshair;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 放大镜遮罩 */
+        .zoom-mask {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: rgba(107, 142, 126, 0.15);
+            border: 1px solid rgba(107, 142, 126, 0.3);
+            border-radius: 4px;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* 放大显示区 */
+        .zoom-large {
+            position: absolute;
+            top: 0;
+            left: 420px;
+            width: 400px;
+            height: 400px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: none;
+            z-index: 10;
+        }
+
+        .zoom-large-img {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            object-fit: contain;
+        }
+
+        /* 缩略图列表 */
+        .thumb-list {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .thumb-arrow {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #999;
+            font-size: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .thumb-arrow:hover {
+            border-color: #6b8e7e;
+            color: #6b8e7e;
+        }
+
+        .thumb-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .thumb-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .thumb-item:hover {
+            border-color: #c9d4c9;
+        }
+
+        .thumb-item.active {
+            border-color: #6b8e7e;
+        }
+
+        .thumb-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ========== 右侧信息区 ========== */
+        .product-info {
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .product-subtitle {
+            font-size: 14px;
+            color: #6b8e7e;
+            margin-bottom: 20px;
+        }
+
+        /* 价格区块 */
+        .price-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .price-label {
+            font-size: 14px;
+            color: #999;
+            width: 60px;
+        }
+
+        .price-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #d48;
+        }
+
+        .price-value::before {
+            content: '¥';
+            font-size: 16px;
+            margin-right: 2px;
+        }
+
+        .price-notice {
+            font-size: 12px;
+            color: #6b8e7e;
+            margin-left: 15px;
+            padding: 3px 10px;
+            background: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .price-notice:hover {
+            background: #6b8e7e;
+            color: #fff;
+        }
+
+        .promo-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .promo-tag {
+            font-size: 12px;
+            color: #d48;
+            background: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            border: 1px solid #d48;
+        }
+
+        .promo-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* 评价信息 */
+        .rating-box {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .rating-item {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .rating-item span {
+            color: #6b8e7e;
+            font-weight: 500;
+        }
+
+        /* 选择区块 */
+        .option-section {
+            margin-bottom: 25px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .option-label {
+            font-size: 14px;
+            color: #999;
+            width: 70px;
+            padding-top: 8px;
+        }
+
+        .option-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-item {
+            padding: 8px 20px;
+            font-size: 13px;
+            color: #333;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .option-item:hover {
+            border-color: #6b8e7e;
+        }
+
+        .option-item.active {
+            border-color: #6b8e7e;
+            background: #f0f5f3;
+            color: #6b8e7e;
+        }
+
+        .option-item.disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            background: #f9f9f9;
+        }
+
+        /* 数量选择 */
+        .quantity-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .quantity-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            background: #f5f5f5;
+            border: none;
+            font-size: 18px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .quantity-btn:hover:not(:disabled) {
+            background: #6b8e7e;
+            color: #fff;
+        }
+
+        .quantity-btn:disabled {
+            color: #ddd;
+            cursor: not-allowed;
+        }
+
+        .quantity-input {
+            width: 60px;
+            height: 40px;
+            border: none;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            background: #fff;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+        }
+
+        .stock-info {
+            margin-left: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 50px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6b8e7e 0%, #5a7a6c 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 142, 126, 0.4);
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #6b8e7e;
+            border: 2px solid #6b8e7e;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f5f3;
+        }
+
+        /* 服务信息 */
+        .service-row {
+            display: flex;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .service-label {
+            font-size: 14px;
+            color: #999;
+            width: 70px;
+        }
+
+        .service-list {
+            display: flex;
+            gap: 20px;
+        }
+
+        .service-item {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .service-item::before {
+            content: '✓';
+            color: #6b8e7e;
+            margin-right: 5px;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .product-gallery {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .product-info {
+                width: 100%;
+            }
+
+            .zoom-large {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-list">
+            <a href="#" class="nav-item active">全部商品</a>
+            <a href="#" class="nav-item">服装城</a>
+            <a href="#" class="nav-item">美妆馆</a>
+            <a href="#" class="nav-item">数码电器</a>
+            <a href="#" class="nav-item">全球购</a>
+            <a href="#" class="nav-item">闪购</a>
+            <a href="#" class="nav-item">拍卖</a>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="main-container">
+        <!-- 左侧商品图 -->
+        <div class="product-gallery">
+            <div class="breadcrumb">
+                <a href="#">手机</a> / <a href="#">数码</a> / <a href="#">通讯</a> / <a href="#">Apple</a>
+            </div>
+
+            <div class="preview-box" id="previewBox">
+                <img class="preview-img" id="previewImg" src="https://img1.360buyimg.com/n2/jfs/t1/383483/39/12802/38429/6953dcceF3f905bf4/287d98606b953be4.jpg" alt="商品图">
+                <div class="zoom-mask" id="zoomMask"></div>
+                <div class="zoom-large" id="zoomLarge">
+                    <img class="zoom-large-img" id="zoomLargeImg" src="./Materials/手机屏幕.jpg" alt="放大图">
+                </div>
+            </div>
+
+            <div class="thumb-list">
+                <div class="thumb-arrow prev">‹</div>
+                <div class="thumb-wrapper">
+                    <div class="thumb-item active"><img src="https://img1.360buyimg.com/n6/jfs/t1/378499/28/22618/52252/695b68ddF38bc7086/e10829f7bee23605.jpg" alt="缩略图"></div>
+                    <div class="thumb-item"><img src="https://img1.360buyimg.com/n2/jfs/t1/397250/8/11619/72774/69a3d373F9a9bc458/00835a05a01327a1.jpg" alt="缩略图"></div>
+                    <div class="thumb-item"><img src="https://img1.360buyimg.com/n6/jfs/t1/339238/40/20619/79216/68f0c374F7375f3f3/7505149e64350ab3.jpg" alt="缩略图"></div>
+                    <div class="thumb-item"><img src="https://img1.360buyimg.com/n2/jfs/t1/397140/1/9234/73417/69a3acb2F394c5766/008332032096e2a1.png" alt="缩略图"></div>
+                    <div class="thumb-item"><img src="https://img1.360buyimg.com/n6/jfs/t1/288240/12/21401/28897/68c21daaFb39955fa/df1d826ba3a8204e.png" alt="缩略图"></div>
+                </div>
+                <div class="thumb-arrow next">›</div>
+            </div>
+        </div>
+
+        <!-- 右侧信息 -->
+        <div class="product-info">
+            <h1 class="product-title">Apple iPhone 15 Pro Max 256GB 原色钛金属 支持移动联通电信5G</h1>
+            <p class="product-subtitle">【年终大促】限时优惠，支持以旧换新，享12期免息分期！</p>
+
+            <!-- 价格 -->
+            <div class="price-box">
+                <div class="price-row">
+                    <span class="price-label">促销价</span>
+                    <span class="price-value">8999.00</span>
+                    <span class="price-notice">降价通知</span>
+                </div>
+                <div class="promo-row">
+                    <span class="price-label">促 销</span>
+                    <span class="promo-tag">限时</span>
+                    <span class="promo-text">满999减50，满1999减100，满4999减300</span>
+                </div>
+            </div>
+
+            <!-- 评价 -->
+            <div class="rating-box">
+                <div class="rating-item">累计评价 <span>12,890</span></div>
+                <div class="rating-item">好评率 <span>98%</span></div>
+                <div class="rating-item">收藏数 <span>5.2万</span></div>
+            </div>
+
+            <!-- 颜色选择 -->
+            <div class="option-section">
+                <div class="option-row">
+                    <span class="option-label">颜色</span>
+                    <div class="option-list" data-type="color">
+                        <div class="option-item active" data-value="原色钛金属">原色钛金属</div>
+                        <div class="option-item" data-value="白色钛金属">白色钛金属</div>
+                        <div class="option-item" data-value="黑色钛金属">黑色钛金属</div>
+                        <div class="option-item" data-value="蓝色钛金属">蓝色钛金属</div>
+                    </div>
+                </div>
+
+                <div class="option-row">
+                    <span class="option-label">版本</span>
+                    <div class="option-list" data-type="version">
+                        <div class="option-item active" data-value="256GB">256GB</div>
+                        <div class="option-item" data-value="512GB">512GB</div>
+                        <div class="option-item" data-value="1TB">1TB</div>
+                    </div>
+                </div>
+
+                <div class="option-row">
+                    <span class="option-label">套餐</span>
+                    <div class="option-list" data-type="package">
+                        <div class="option-item active" data-value="官方标配">官方标配</div>
+                        <div class="option-item" data-value="充电套装">充电套装</div>
+                        <div class="option-item" data-value="保护套装">保护套装</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数量 -->
+            <div class="quantity-row">
+                <span class="option-label">数量</span>
+                <div class="quantity-box">
+                    <button class="quantity-btn minus" id="decrement">−</button>
+                    <input type="text" class="quantity-input" id="quantity" value="1" readonly>
+                    <button class="quantity-btn plus" id="increment">+</button>
+                </div>
+                <span class="stock-info">库存 99 件</span>
+            </div>
+
+            <!-- 按钮 -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="addCart">加入购物车</button>
+                <button class="btn btn-secondary" id="buyNow">立即购买</button>
+            </div>
+
+            <!-- 服务 -->
+            <div class="service-row">
+                <span class="service-label">服务</span>
+                <div class="service-list">
+                    <span class="service-item">7天无理由退换</span>
+                    <span class="service-item">全国联保</span>
+                    <span class="service-item">顺丰包邮</span>
+                    <span class="service-item">以旧换新</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function() {
+            // ========== 导航切换 ==========
+            $(".nav-item").on("click", function(e) {
+                e.preventDefault();
+                $(this).addClass("active").siblings().removeClass("active");
+            });
+
+            // ========== 缩略图切换 ==========
+            var imageList = [
+                "./Materials/手机屏幕.jpg",
+                "./Materials/手机2.jpg",
+                "./Materials/手机3.jpg",
+                "./Materials/手机4.jpg",
+                "./Materials/手机5.png"
+            ];
+
+            $(".thumb-item").on("click", function() {
+                var index = $(this).index();
+                $(this).addClass("active").siblings().removeClass("active");
+                $("#previewImg, #zoomLargeImg").attr("src", imageList[index]);
+            });
+
+            // 缩略图箭头（简单演示）
+            $(".thumb-arrow.prev").on("click", function() {
+                var $items = $(".thumb-item");
+                var activeIndex = $items.filter(".active").index();
+                if (activeIndex > 0) {
+                    $items.eq(activeIndex - 1).click();
+                }
+            });
+
+            $(".thumb-arrow.next").on("click", function() {
+                var $items = $(".thumb-item");
+                var activeIndex = $items.filter(".active").index();
+                if (activeIndex < $items.length - 1) {
+                    $items.eq(activeIndex + 1).click();
+                }
+            });
+
+            // ========== 规格选择 ==========
+            $(".option-item").on("click", function() {
+                if ($(this).hasClass("disabled")) return;
+                $(this).addClass("active").siblings().removeClass("active");
+            });
+
+            // ========== 数量控制 ==========
+            var quantity = 1;
+            var minQty = 1;
+            var maxQty = 99;
+
+            function updateQuantity(val) {
+                quantity = Math.max(minQty, Math.min(maxQty, val));
+                $("#quantity").val(quantity);
+                $("#decrement").prop("disabled", quantity <= minQty);
+                $("#increment").prop("disabled", quantity >= maxQty);
+            }
+
+            $("#decrement").on("click", function() {
+                updateQuantity(quantity - 1);
+            });
+
+            $("#increment").on("click", function() {
+                updateQuantity(quantity + 1);
+            });
+
+            // 初始状态
+            updateQuantity(1);
+
+            // ========== 购物车操作 ==========
+            function getSelectedOptions() {
+                var options = {};
+                $(".option-list").each(function() {
+                    var type = $(this).data("type");
+                    var value = $(this).find(".option-item.active").data("value");
+                    options[type] = value;
+                });
+                return options;
+            }
+
+            $("#addCart").on("click", function() {
+                var options = getSelectedOptions();
+                var message = "已选择：\n" +
+                    "颜色：" + options.color + "\n" +
+                    "版本：" + options.version + "\n" +
+                    "套餐：" + options.package + "\n" +
+                    "数量：" + quantity + " 件";
+                
+                alert(message + "\n\n已成功加入购物车！");
+            });
+
+            $("#buyNow").on("click", function() {
+                var options = getSelectedOptions();
+                alert("正在跳转到结算页面...");
+            });
+
+            // ========== 放大镜效果 ==========
+            var $previewBox = $("#previewBox");
+            var $zoomMask = $("#zoomMask");
+            var $zoomLarge = $("#zoomLarge");
+            var $zoomLargeImg = $("#zoomLargeImg");
+
+            var maskW = 200;
+            var maskH = 200;
+            var zoomRatio = 2;
+
+            $previewBox.on({
+                mouseenter: function() {
+                    $zoomMask.stop().fadeIn(200);
+                    $zoomLarge.stop().fadeIn(200);
+                },
+                mouseleave: function() {
+                    $zoomMask.stop().fadeOut(200);
+                    $zoomLarge.stop().fadeOut(200);
+                },
+                mousemove: function(e) {
+                    var offset = $(this).offset();
+                    var boxW = $(this).width();
+                    var boxH = $(this).height();
+
+                    // 鼠标相对于预览框的位置
+                    var mouseX = e.pageX - offset.left;
+                    var mouseY = e.pageY - offset.top;
+
+                    // 计算遮罩位置（让鼠标在遮罩中心）
+                    var maskLeft = mouseX - maskW / 2;
+                    var maskTop = mouseY - maskH / 2;
+
+                    // 限制在预览框内
+                    maskLeft = Math.max(0, Math.min(maskLeft, boxW - maskW));
+                    maskTop = Math.max(0, Math.min(maskTop, boxH - maskH));
+
+                    // 设置遮罩位置
+                    $zoomMask.css({
+                        left: maskLeft,
+                        top: maskTop
+                    });
+
+                    // 计算放大图移动位置
+                    var largeLeft = -maskLeft * zoomRatio;
+                    var largeTop = -maskTop * zoomRatio;
+
+                    $zoomLargeImg.css({
+                        left: largeLeft,
+                        top: largeTop
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
