@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航切换图片 - Made By CappuccinoRose</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecef 100%);
+            font-family: "Microsoft YaHei", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* 导航标签栏 */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-item {
+            padding: 12px 28px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #7a8a9a;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .nav-item:hover {
+            background: #eef2f5;
+            color: #6a7a8a;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(168, 196, 201, 0.4);
+        }
+
+        /* 图片展示区 */
+        .gallery {
+            position: relative;
+            height: 450px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            background: #fff;
+        }
+
+        .gallery-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gallery-item.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+
+        /* 图片标题遮罩 */
+        .gallery-item::after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 25px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+            color: #fff;
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 2px;
+        }
+
+        /* 指示器 */
+        .indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d0d7de;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .indicator:hover {
+            background: #a8c4c9;
+        }
+
+        .indicator.active {
+            width: 24px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #a8c4c9 0%, #c9b8a8 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航标签 -->
+        <div class="nav-tabs">
+            <button class="nav-item active" data-index="0">冰蓝</button>
+            <button class="nav-item" data-index="1">海棠</button>
+            <button class="nav-item" data-index="2">火灵</button>
+            <button class="nav-item" data-index="3">花雨</button>
+            <button class="nav-item" data-index="4">迎春</button>
+        </div>
+
+        <!-- 图片展示区 -->
+        <div class="gallery">
+            <!-- 使用稳定的Lorem Picsum图片服务 -->
+            <div class="gallery-item active" data-title="冰蓝">
+                <img src="https://picsum.photos/seed/iceblue/800/450" alt="冰蓝">
+            </div>
+            <div class="gallery-item" data-title="海棠">
+                <img src="https://picsum.photos/seed/begonia/800/450" alt="海棠">
+            </div>
+            <div class="gallery-item" data-title="火灵">
+                <img src="https://picsum.photos/seed/fire/800/450" alt="火灵">
+            </div>
+            <div class="gallery-item" data-title="花雨">
+                <img src="https://picsum.photos/seed/flowerrain/800/450" alt="花雨">
+            </div>
+            <div class="gallery-item" data-title="迎春">
+                <img src="https://picsum.photos/seed/spring/800/450" alt="迎春">
+            </div>
+        </div>
+
+        <!-- 指示器 -->
+        <div class="indicators">
+            <span class="indicator active" data-index="0"></span>
+            <span class="indicator" data-index="1"></span>
+            <span class="indicator" data-index="2"></span>
+            <span class="indicator" data-index="3"></span>
+            <span class="indicator" data-index="4"></span>
+        </div>
+    </div>
+
+    <script>
+        $(function() {
+            var $navItems = $('.nav-item');
+            var $galleryItems = $('.gallery-item');
+            var $indicators = $('.indicator');
+            var currentIndex = 0;
+            var autoPlayTimer = null;
+
+            // 切换函数
+            function switchTo(index) {
+                if (index === currentIndex) return;
+                
+                // 更新导航
+                $navItems.removeClass('active');
+                $navItems.eq(index).addClass('active');
+                
+                // 更新图片 - 淡入淡出
+                $galleryItems.eq(currentIndex).removeClass('active');
+                $galleryItems.eq(index).addClass('active');
+                
+                // 更新指示器
+                $indicators.removeClass('active');
+                $indicators.eq(index).addClass('active');
+                
+                currentIndex = index;
+            }
+
+            // 导航点击
+            $navItems.on('click', function() {
+                var index = $(this).data('index');
+                switchTo(index);
+                resetAutoPlay();
+            });
+
+            // 指示器点击
+            $indicators.on('click', function() {
+                var index = $(this).data('index');
+                switchTo(index);
+                resetAutoPlay();
+            });
+
+            // 自动轮播
+            function autoPlay() {
+                autoPlayTimer = setInterval(function() {
+                    var nextIndex = (currentIndex + 1) % 5;
+                    switchTo(nextIndex);
+                }, 3000);
+            }
+
+            function resetAutoPlay() {
+                clearInterval(autoPlayTimer);
+                autoPlay();
+            }
+
+            // 启动自动轮播
+            autoPlay();
+
+            // 鼠标悬停暂停
+            $('.gallery').hover(
+                function() { clearInterval(autoPlayTimer); },
+                function() { autoPlay(); }
+            );
+        });
+    </script>
+</body>
+</html>
