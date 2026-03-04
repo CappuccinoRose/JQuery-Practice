@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主题换肤 - Made By CappuccinoRose</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "Microsoft YaHei", sans-serif;
+            /* 初始背景 */
+            background-color: #f0f2f5;
+            background-image: url('https://picsum.photos/seed/theme1/1920/1080');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            /* 背景切换过渡动画 */
+            transition: background-image 0.8s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 40px;
+        }
+
+        /* 底部选择器容器 */
+        .theme-selector {
+            width: 90%;
+            max-width: 1100px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px); /* 毛玻璃效果 */
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 标题 */
+        .selector-title {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .theme-list {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .theme-item {
+            position: relative;
+            width: 160px;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 默认未选中状态 */
+        .theme-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0.6;
+            transition: all 0.4s ease;
+        }
+
+        /* 图片名称遮罩 */
+        .theme-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 8px 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: #fff;
+            font-size: 12px;
+            text-align: center;
+            letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* 悬停效果 */
+        .theme-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .theme-item:hover img {
+            opacity: 0.9;
+        }
+
+        .theme-item:hover .theme-name {
+            opacity: 1;
+        }
+
+        /* 选中状态 */
+        .theme-item.active {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 2px solid #fff;
+        }
+
+        .theme-item.active img {
+            opacity: 1;
+        }
+
+        .theme-item.active .theme-name {
+            opacity: 1;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .theme-list {
+                flex-wrap: wrap;
+            }
+            .theme-item {
+                width: calc(50% - 10px);
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="theme-selector">
+        <h3 class="selector-title">选择您喜欢的主题</h3>
+        <ul class="theme-list" id="themeList">
+            <li class="theme-item active">
+                <img src="https://picsum.photos/seed/theme1/400/300" alt="晨曦微光">
+                <div class="theme-name">晨曦微光</div>
+            </li>
+            <li class="theme-item">
+                <img src="https://picsum.photos/seed/theme2/400/300" alt="暮色温柔">
+                <div class="theme-name">暮色温柔</div>
+            </li>
+            <li class="theme-item">
+                <img src="https://picsum.photos/seed/theme3/400/300" alt="星河滚烫">
+                <div class="theme-name">星河滚烫</div>
+            </li>
+            <li class="theme-item">
+                <img src="https://picsum.photos/seed/theme4/400/300" alt="山海自有归期">
+                <div class="theme-name">山海自有归期</div>
+            </li>
+            <li class="theme-item">
+                <img src="https://picsum.photos/seed/theme5/400/300" alt="风雨自有相逢">
+                <div class="theme-name">风雨自有相逢</div>
+            </li>
+            <li class="theme-item">
+                <img src="https://picsum.photos/seed/theme6/400/300" alt="人间理想">
+                <div class="theme-name">人间理想</div>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        $(function() {
+            // 初始加载第一张图为背景
+            var $firstItem = $('#themeList .theme-item').first();
+            var firstImgSrc = $firstItem.find('img').attr('src');
+            $('body').css('background-image', 'url(' + firstImgSrc + ')');
+
+            // 点击切换主题
+            $('#themeList').on('click', '.theme-item', function() {
+                var $this = $(this);
+                var imgSrc = $this.find('img').attr('src');
+
+                // 1. 切换背景图片（CSS transition会自动处理动画）
+                $('body').css('background-image', 'url(' + imgSrc + ')');
+
+                // 2. 更新选中状态
+                $this.addClass('active').siblings().removeClass('active');
+            });
+        });
+    </script>
+</body>
+</html>
