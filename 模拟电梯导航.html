@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电梯导航 - Made By CappuccinoRose</title>
+    <script src="./jquery-3.7.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecef 100%);
+            min-height: 100vh;
+        }
+
+        /* 模拟页面内容 */
+        .page-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 20px 100px;
+        }
+
+        .section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            min-height: 300px;
+        }
+
+        .section h2 {
+            font-size: 24px;
+            color: #4a5568;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        .section p {
+            color: #7a8a9a;
+            line-height: 1.8;
+        }
+
+        /* ========== 右侧电梯导航 ========== */
+        .elevator-nav {
+            position: fixed;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 导航项 */
+        .nav-group {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            width: 50px;
+        }
+
+        .nav-group.expanded {
+            width: 160px;
+        }
+
+        /* 标题按钮 */
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 50px;
+            padding: 0 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-header .icon {
+            font-size: 20px;
+            margin-right: 8px;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-header .text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+            white-space: nowrap;
+            display: none;
+        }
+
+        .nav-group.expanded .nav-header .text {
+            display: block;
+        }
+
+        .nav-group.expanded .nav-header .icon {
+            margin-right: 6px;
+        }
+
+        /* 不同分类的颜色 */
+        .nav-group.application .nav-header {
+            background: linear-gradient(135deg, #a8c4c9 0%, #8fa8ad 100%);
+        }
+
+        .nav-group.festival .nav-header {
+            background: linear-gradient(135deg, #c9b8a8 0%, #b8a898 100%);
+        }
+
+        .nav-group.object .nav-header {
+            background: linear-gradient(135deg, #b8c9a8 0%, #a8b898 100%);
+        }
+
+        .nav-group.flower-type .nav-header {
+            background: linear-gradient(135deg, #c9a8b8 0%, #b898a8 100%);
+        }
+
+        /* 子菜单列表 */
+        .nav-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-group.expanded .nav-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .nav-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .nav-list::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .nav-list a {
+            display: block;
+            padding: 10px 20px;
+            font-size: 13px;
+            color: #5a6a7a;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+
+        .nav-list a:hover {
+            background: #f8f9fa;
+            color: #6b8e7e;
+            padding-left: 25px;
+        }
+
+        /* 置顶按钮 */
+        .back-top {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-top:hover {
+            background: #6b8e7e;
+            color: #fff;
+            box-shadow: 0 6px 25px rgba(107, 142, 126, 0.3);
+        }
+
+        .back-top .arrow {
+            font-size: 20px;
+            color: #6b8e7e;
+            transition: color 0.3s ease;
+        }
+
+        .back-top:hover .arrow {
+            color: #fff;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .elevator-nav {
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .elevator-nav {
+                position: fixed;
+                bottom: 20px;
+                top: auto;
+                right: 20px;
+                transform: none;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                max-width: 200px;
+            }
+
+            .nav-group {
+                width: 50px !important;
+            }
+
+            .nav-group.expanded {
+                width: 160px !important;
+                position: relative;
+                z-index: 10;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 模拟页面内容 -->
+    <div class="page-content">
+        <div class="section" id="application">
+            <h2>💌 用途导航</h2>
+            <p>根据送花的用途选择合适的鲜花，表达您的心意。无论是爱情表白、生日祝福、友情问候，还是婚礼庆典、节日问候，这里都有最适合您的选择。</p>
+        </div>
+
+        <div class="section" id="festival">
+            <h2>🎉 节日导航</h2>
+            <p>每个节日都有其独特的意义和象征。元旦、春节、情人节、母亲节、圣诞节...为您精选各节日的主题花束，让每个节日都充满仪式感。</p>
+        </div>
+
+        <div class="section" id="object">
+            <h2>💝 对象导航</h2>
+            <p>送给不同的人，选择不同的花。男朋友、女朋友、父母、老师、朋友、闺蜜...根据接收对象，挑选最能表达心意的鲜花。</p>
+        </div>
+
+        <div class="section" id="flower-type">
+            <h2>🌸 种类导航</h2>
+            <p>玫瑰代表爱情，康乃馨代表母爱，百合象征纯洁，向日葵寓意阳光。探索各种花语，找到最适合您的那一束。</p>
+        </div>
+    </div>
+
+    <!-- 电梯导航 -->
+    <nav class="elevator-nav">
+        <!-- 用途 -->
+        <div class="nav-group application" data-target="#application">
+            <div class="nav-header">
+                <span class="icon">💌</span>
+                <span class="text">用途</span>
+            </div>
+            <div class="nav-list">
+                <a href="#">爱情</a>
+                <a href="#">生日</a>
+                <a href="#">友情</a>
+                <a href="#">祝福</a>
+                <a href="#">结婚</a>
+                <a href="#">纪念日</a>
+                <a href="#">开业</a>
+                <a href="#">毕业</a>
+                <a href="#">探望</a>
+                <a href="#">道歉</a>
+                <a href="#">哀思</a>
+            </div>
+        </div>
+
+        <!-- 节日 -->
+        <div class="nav-group festival" data-target="#festival">
+            <div class="nav-header">
+                <span class="icon">🎉</span>
+                <span class="text">节日</span>
+            </div>
+            <div class="nav-list">
+                <a href="#">元旦</a>
+                <a href="#">春节</a>
+                <a href="#">情人节</a>
+                <a href="#">妇女节</a>
+                <a href="#">母亲节</a>
+                <a href="#">端午节</a>
+                <a href="#">七夕</a>
+                <a href="#">教师节</a>
+                <a href="#">中秋节</a>
+                <a href="#">国庆节</a>
+                <a href="#">圣诞节</a>
+                <a href="#">父亲节</a>
+            </div>
+        </div>
+
+        <!-- 对象 -->
+        <div class="nav-group object" data-target="#object">
+            <div class="nav-header">
+                <span class="icon">💝</span>
+                <span class="text">对象</span>
+            </div>
+            <div class="nav-list">
+                <a href="#">男朋友</a>
+                <a href="#">女朋友</a>
+                <a href="#">父亲</a>
+                <a href="#">母亲</a>
+                <a href="#">老师</a>
+                <a href="#">领导</a>
+                <a href="#">同事</a>
+                <a href="#">朋友</a>
+                <a href="#">闺蜜</a>
+                <a href="#">长辈</a>
+            </div>
+        </div>
+
+        <!-- 种类 -->
+        <div class="nav-group flower-type" data-target="#flower-type">
+            <div class="nav-header">
+                <span class="icon">🌸</span>
+                <span class="text">种类</span>
+            </div>
+            <div class="nav-list">
+                <a href="#">玫瑰</a>
+                <a href="#">康乃馨</a>
+                <a href="#">百合</a>
+                <a href="#">向日葵</a>
+                <a href="#">郁金香</a>
+                <a href="#">薰衣草</a>
+                <a href="#">满天星</a>
+                <a href="#">绣球花</a>
+                <a href="#">菊花</a>
+                <a href="#">兰花</a>
+                <a href="#">月季</a>
+                <a href="#">茉莉花</a>
+            </div>
+        </div>
+
+        <!-- 返回顶部 -->
+        <div class="back-top" id="backTop">
+            <span class="arrow">↑</span>
+        </div>
+    </nav>
+
+    <script>
+        $(function() {
+            // 点击展开/收起导航
+            $(".nav-header").on("click", function() {
+                var $group = $(this).closest(".nav-group");
+                
+                // 如果点击的是已展开的，则收起
+                if ($group.hasClass("expanded")) {
+                    $group.removeClass("expanded");
+                } else {
+                    // 先收起其他展开的
+                    $(".nav-group").removeClass("expanded");
+                    // 再展开当前点击的
+                    $group.addClass("expanded");
+                }
+            });
+
+            // 点击子菜单项收起导航（可选）
+            $(".nav-list a").on("click", function(e) {
+                e.preventDefault();
+                $(this).closest(".nav-group").removeClass("expanded");
+                
+                // 这里可以添加实际的跳转逻辑
+                console.log("点击了：" + $(this).text());
+            });
+
+            // 滚动显示/隐藏返回顶部按钮
+            $(window).on("scroll", function() {
+                var scrollTop = $(this).scrollTop();
+                
+                if (scrollTop > 300) {
+                    $("#backTop").addClass("show");
+                } else {
+                    $("#backTop").removeClass("show");
+                }
+            });
+
+            // 点击返回顶部
+            $("#backTop").on("click", function() {
+                $("html, body").stop().animate(
+                    { scrollTop: 0 },
+                    { duration: 500, easing: "swing" }
+                );
+            });
+
+            // 点击导航标题滚动到对应区域
+            $(".nav-group").on("click", function() {
+                var target = $(this).data("target");
+                if (target) {
+                    $("html, body").stop().animate(
+                        { scrollTop: $(target).offset().top - 30 },
+                        { duration: 400, easing: "swing" }
+                    );
+                }
+            });
+
+            // 点击其他地方收起导航
+            $(document).on("click", function(e) {
+                if (!$(e.target).closest(".elevator-nav").length) {
+                    $(".nav-group").removeClass("expanded");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
